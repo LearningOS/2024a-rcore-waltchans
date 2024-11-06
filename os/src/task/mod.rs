@@ -27,7 +27,8 @@ use lazy_static::*;
 pub use manager::{fetch_task, TaskManager};
 use switch::__switch;
 pub use task::{TaskControlBlock, TaskStatus};
-
+use crate::timer::get_time_ms;
+use crate::syscall::TaskInfo;
 pub use context::TaskContext;
 pub use id::{kstack_alloc, pid_alloc, KernelStack, PidHandle};
 pub use manager::add_task;
@@ -138,4 +139,12 @@ pub fn get_task_syscall_times() -> [u32; MAX_SYSCALL_NUM] {
 /// My work
 pub fn syscall_count(syscall_id: usize) {
     TASK_MANAGER.syscall_count(syscall_id);
+}
+
+pub fn task_call_count(syscall_id: usize) {
+    TASK_MANAGER.task_call_count(syscall_id);
+}
+
+pub fn get_task_info(_ti: *mut TaskInfo) {
+    TASK_MANAGER.get_task_info(_ti);
 }
