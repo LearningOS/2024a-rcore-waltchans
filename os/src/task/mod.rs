@@ -21,7 +21,6 @@ use lazy_static::*;
 use switch::__switch;
 pub use task::{TaskControlBlock, TaskStatus};
 use crate::timer::get_time_ms;
-use crate::syscall::TaskInfo;
 pub use context::TaskContext;
 
 /// The task manager, where all the tasks are managed.
@@ -148,17 +147,11 @@ impl TaskManager {
         task_current.task_syscall_times[syscall_id]+=1;
     }
 
-    fn get_task_info(&self, _ti: *mut TaskInfo) {
+    fn get_task_info(&self) -> TaskControlBlock{
         let inner = TASK_MANAGER.inner.exclusive_access();
         let current = inner.current_task;
-
-        // let task_current = &inner.tasks[inner.current_task];
-        // let syscall_times = &task_current.syscall_times;
-        *_ti = TaskInfo {
-            status: inner.tasks[current].task_status,
-            syscall_times: inner.tasks[current].task_syscall_times,
-            time: get_time_ms() - inner.tasks[current].task_start_time,
-        };
+        inner.tasks[current]
+        
     }
 }
 
@@ -195,10 +188,12 @@ pub fn exit_current_and_run_next() {
     run_next_task();
 }
 
+/// Add the syscall count
 pub fn task_call_count(syscall_id: usize) {
     TASK_MANAGER.task_call_count(syscall_id);
 }
 
-pub fn get_task_info(_ti: *mut TaskInfo) {
-    TASK_MANAGER.get_task_info(_ti);
+/// get the current task info
+pub fn get_task_info() -> TaskControlBlock {
+    TASK_MANAGER.get_task_info()
 }
