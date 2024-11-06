@@ -53,5 +53,14 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
 /// YOUR JOB: Finish sys_task_info to pass testcases
 pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
     trace!("kernel: sys_task_info");
-    -1
+    // -1
+    let inner=TASK_MANAGER.inner as TaskManagerInner;
+    let task_current = inner.tasks[inner.current_task] as TaskControlBlock;
+    let syscall_times = &task_current.syscall_times;
+    *_ti = {
+        task_current.task_status,
+        syscall_times,
+        get_time_ms() - task_current.task_start_time,
+    };
+    0
 }
