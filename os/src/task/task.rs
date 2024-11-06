@@ -14,7 +14,7 @@ pub struct TaskControlBlock {
     /// The task context
     pub task_cx: TaskContext,
     
-    pub task_start_time: usize;
+    pub task_start_time: usize,
     pub task_syscall_times: [u32; MAX_SYSCALL_NUM],
 }
 

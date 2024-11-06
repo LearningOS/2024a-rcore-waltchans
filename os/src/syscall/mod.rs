@@ -26,12 +26,13 @@ mod process;
 
 use fs::*;
 use process::*;
+use crate::{
+    task::{task_call_count},
+};
+
 /// handle syscall exception with `syscall_id` and other arguments
 pub fn syscall(syscall_id: usize, args: [usize; 3]) -> isize {
-    let mut inner = mut TASK_MANAGER.inner as TaskManagerInner;
-    let mut task_current = mut inner.tasks[inner.current_task] as mut TaskControlBlock;
-    let mut syscall_times = &mut task_current.syscall_times;
-    syscall_times[syscall_id]+=1;
+    task_call_count(syscall_id);
     match syscall_id {
         SYSCALL_WRITE => sys_write(args[0], args[1] as *const u8, args[2]),
         SYSCALL_EXIT => sys_exit(args[0] as i32),
