@@ -119,13 +119,19 @@ impl TaskControlBlock {
 
 
         let _end = _start + _len;
-        if let Some(perm) = MapPermission::from_bits((_port << 1 | 1 << 4) as u8){
-            self.memory_set
+        // if let Some(perm) = MapPermission::from_bits((_port << 1 | 1 << 4) as u8){
+        //     self.memory_set
+        //     .insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
+        // } else {
+        //     false
+        // }
+        let  mut perm =MapPermission::empty();
+        perm.set(MapPermission::R, _port & 1 != 0);
+        perm.set(MapPermission::W, _port & 2 != 0);
+        perm.set(MapPermission::X, _port & 4 != 0);
+        perm.set(MapPermission::U, true);
+        self.memory_set
             .insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
-        } else {
-            false
-        }
-        
     }
     pub fn program_mummap(&mut self, _start: usize, _len: usize) -> bool {
         // let old_break = self.program_brk;
