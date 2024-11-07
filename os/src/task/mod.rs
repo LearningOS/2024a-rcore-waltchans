@@ -153,7 +153,35 @@ impl TaskManager {
             panic!("All applications completed!");
         }
     }
+
+    /// My job
+    pub fn program_mummap(&mut self, _start: usize, _len: usize) -> bool {
+        let mut inner = self.inner.exclusive_access();
+        let cur = inner.current_task;
+        inner.tasks[cur].program_mummap(_start, _len)
+    }
+
+    /// My job
+    pub fn program_mmap(&mut self, _start: usize, _len: usize, _port: usize) -> bool {
+        let mut inner = self.inner.exclusive_access();
+        let cur = inner.current_task;
+        inner.tasks[cur].program_mmap(_start, _len, _port)
+    }
+
+    pub fn get_task_info(&mut self) {
+        let inner = self.inner.exclusive_access();
+        let cur = inner.current_task;
+        inner.tasks[cur].get_task_info()
+    }
+
+    pub fn get_task_info(&mut self, syscall_id: usize) {
+        let mut inner = self.inner.exclusive_access();
+        let cur = inner.current_task;
+        inner.tasks[cur].syscall_count(syscall_id)
+    }
 }
+
+
 
 /// Run the first task in task list.
 pub fn run_first_task() {
@@ -201,4 +229,22 @@ pub fn current_trap_cx() -> &'static mut TrapContext {
 /// Change the current 'Running' task's program break
 pub fn change_program_brk(size: i32) -> Option<usize> {
     TASK_MANAGER.change_current_program_brk(size)
+}
+
+/// My work
+pub fn program_mmap(_start: usize, _len: usize, _port: usize) -> bool {
+    TASK_MANAGER.program_mmap(_start, _len, _port)
+}
+
+/// My work
+pub fn program_mummap(_start: usize, _len: usize) -> bool {
+    TASK_MANAGER.program_mummap(_start, _len)
+}
+
+pub fn get_task_info() -> TaskControlBlock {
+    TASK_MANAGER.get_task_info()
+}
+
+pub fn syscall_count(syscall_id: usize) -> TaskControlBlock {
+    TASK_MANAGER.syscall_count(syscall_id)
 }

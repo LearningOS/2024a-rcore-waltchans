@@ -1,9 +1,11 @@
 //! Types related to task management
 use super::TaskContext;
-use crate::config::TRAP_CONTEXT_BASE;
+use crate::config::{MAX_SYSCALL_NUM, TRAP_CONTEXT_BASE};
 use crate::mm::{
     kernel_stack_position, MapPermission, MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE,
 };
+use crate::timer::get_time_us;
+
 use crate::trap::{trap_handler, TrapContext};
 
 /// The task control block (TCB) of a task.
@@ -28,6 +30,11 @@ pub struct TaskControlBlock {
 
     /// Program break
     pub program_brk: usize,
+
+    /// The numbers of syscall called by task
+    pub syscall_times: [u32; MAX_SYSCALL_NUM],
+    /// Total running time of task
+    pub time: usize,
 }
 
 impl TaskControlBlock {
@@ -63,6 +70,8 @@ impl TaskControlBlock {
             base_size: user_sp,
             heap_bottom: user_sp,
             program_brk: user_sp,
+            syscall_times: [0; MAX_SYSCALL_NUM],
+            time: get_time_us(),
         };
         // prepare TrapContext in user space
         let trap_cx = task_control_block.get_trap_cx();
@@ -95,6 +104,41 @@ impl TaskControlBlock {
         } else {
             None
         }
+    }
+    pub fn program_mmap(&mut self, _start: usize, _len: usize, _port: usize) -> bool {
+        // let old_break = self.program_brk;
+        // let new_brk = self.program_brk as isize + size as isize;
+        if _len == 0 ||
+        _port & !0x7 !=0 ||
+        _port & 0x7 == 0
+        {
+            return false;
+        }
+
+
+        let _end = _start + _len;
+        let perm = MapPermission.from_bits(_port<<1 | 1<< 4);
+        
+        self.memory_set
+                .insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
+        
+    }
+    pub fn program_mummap(&mut self, _start: usize, _len: usize) -> bool {
+        // let old_break = self.program_brk;
+        // let new_brk = self.program_brk as isize + size as isize;
+        if _len == 0 {
+            return false;
+        }
+        let _end = _start + _len;
+        
+        self.memory_set
+                .delete_framed_area(VirtAddr(_start), VirtAddr(_end))
+    }
+    pub fn get_task_info(&self) -> self {
+        self
+    }
+    pub fn syscall_count(&mut self, syscall_id: usize) {
+        self.syscall_times[syscall_id] += 1;
     }
 }
 
