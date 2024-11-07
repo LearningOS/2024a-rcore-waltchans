@@ -94,12 +94,13 @@ impl MemorySet {
         start_va: VirtAddr,
         end_va: VirtAddr,
     ) -> bool {
-        if let Some(area) = self
+        if let Some((idx, area)) = self
             .areas
             .iter_mut()
-            .find(|area| area.vpn_range.get_start() == start_va.floor() && area.vpn_range.get_end() == end_va.ceil())
+            .enumerate()
+            .find(| (_, area) | area.vpn_range.get_start() == start_va.floor() && area.vpn_range.get_end() == end_va.ceil())
         {
-            self.pop(area);
+            self.pop(idx);
             true
         } else {
             false
@@ -115,9 +116,10 @@ impl MemorySet {
         self.areas.push(map_area);
     }
     
-    fn pop(&mut self, mut map_area: MapArea) {
-        map_area.umap(&mut self.page_table);
-        self.areas.remove(map_area);
+    fn pop(&mut self, idx: usize) {
+        let map_area = &mut self.areas[idx];
+        map_area.unmap(&mut self.page_table);
+        self.areas.remove(idx);
     }
 
 
@@ -387,6 +389,10 @@ impl MapArea {
         let pte_flags = PTEFlags::from_bits(self.map_perm.bits).unwrap();
         page_table.map(vpn, ppn, pte_flags);
     }
+<<<<<<< HEAD
+=======
+    // #[allow(unused)]
+>>>>>>> d747414 (try1.1)
     pub fn unmap_one(&mut self, page_table: &mut PageTable, vpn: VirtPageNum) {
         if self.map_type == MapType::Framed {
             self.data_frames.remove(&vpn);
@@ -398,6 +404,10 @@ impl MapArea {
             self.map_one(page_table, vpn);
         }
     }
+<<<<<<< HEAD
+=======
+    // #[allow(unused)]
+>>>>>>> d747414 (try1.1)
     pub fn unmap(&mut self, page_table: &mut PageTable) {
         for vpn in self.vpn_range {
             self.unmap_one(page_table, vpn);

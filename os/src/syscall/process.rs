@@ -121,25 +121,39 @@ pub fn sys_waitpid(pid: isize, exit_code_ptr: *mut i32) -> isize {
         -2
     }
     // ---- release current PCB automatically
+fn write_into_buffer(token: usize, ptr: *const u8, len: usize, src: *const u8) -> bool {
+    let dstVec = translated_byte_buffer(token, ptr, len);
+    let mut insize = 0;
+    for dst in dstVec {
+        let blen = dst.len();
+        if (blen > len - insize) {
+            let end = len - insize;
+        }
+        unsafe {
+            let bufsrc = src.add(blen);
+            dst.copy_from_slice(core::slice::from_raw_parts(bufsrc, blen) as &[u8]);
+        };
+    }
+    false
 }
 
 /// YOUR JOB: get time with second and microsecond
 /// HINT: You might reimplement it with virtual memory management.
 /// HINT: What if [`TimeVal`] is splitted by two pages ?
 pub fn sys_get_time(_ts: *mut TimeVal, _tz: usize) -> isize {
-    trace!(
-        "kernel:pid[{}] sys_get_time NOT IMPLEMENTED",
-        current_task().unwrap().pid.0
-    );
-    -1
+    // trace!(
+    //     "kernel:pid[{}] sys_get_time NOT IMPLEMENTED",
+    //     current_task().unwrap().pid.0
+    // );
+    // -1
 
-    // trace!("kernel: sys_get_time");
-    // let us = get_time_us();
-    // let time_info=TimeVal {
-    //     sec: us / 1_000_000,
-    //     usec: us % 1_000_000,
-    // };
-    // let buffers = translated_byte_buffer(current_user_token(), _ts as *mut u8, _tz);
+    trace!("kernel: sys_get_time");
+    let us = get_time_us();
+    let time_info=TimeVal {
+        sec: us / 1_000_000,
+        usec: us % 1_000_000,
+    };
+    let buffers = translated_byte_buffer(current_user_token(), _ts as *mut u8, _tz);
     
     // unsafe{
     //     let time_str: &[u8] = core::slice::from_raw_parts(&time_info, _tz);
@@ -148,6 +162,8 @@ pub fn sys_get_time(_ts: *mut TimeVal, _tz: usize) -> isize {
     //     }
     // };
     // 0
+    write_into_buffer(current_user_token(), _ts as *const u8, _tz, &time_info as *const TimeVal as *const u8);
+    0
 }
 
 /// YOUR JOB: Finish sys_task_info to pass testcases
@@ -160,22 +176,14 @@ pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
     // );
     // -1
     trace!("kernel: sys_task_info NOT IMPLEMENTED YET!");
-    let task=get_task_info() as TaskControlBlock;
     let taskinfo= TaskInfo {
-            status: task.task_status,
-            syscall_times: task.task_syscall_times,
-            time: get_time_ms() - task.task_start_time,
+            status: TaskStatus::Running,
+            syscall_times: get_task_syscall_times(),
+            time: get_time_ms() - get_task_first_run_time(),
         };
     let size = core::mem::size_of::<TaskInfo>();
-    let buffers = translated_byte_buffer(current_user_token(), _ti as *mut u8, size);
-    unsafe{
-        let taskinfo_str: &[u8] = core::slice::from_raw_parts(&taskinfo, size);
-        for idx in 0..buffers.len() {
-            *buffers[idx] = taskinfo_str[idx];
-        }
-    };
-    
 
+    write_into_buffer(current_user_token(), _ti as *const u8, size, &taskinfo as *const TaskInfo as *const u8);
     0
 }
 
@@ -196,13 +204,13 @@ pub fn sys_mmap(_start: usize, _len: usize, _port: usize) -> isize {
 //     );
 //     -1
     trace!("kernel: sys_mmap NOT IMPLEMENTED YET!");
-    program_mmap(_start, _len, _port) 
+    program_mmap(_start, _len, _port) as isize
 }
 
 // YOUR JOB: Implement munmap.
-pub fn sys_munmap(_start: usize, _len: usize) -> bool {
+pub fn sys_munmap(_start: usize, _len: usize) -> isize {
     trace!("kernel: sys_munmap NOT IMPLEMENTED YET!");
-    program_mummap(_start, _len)
+    program_mummap(_start, _len) as isize
 }
 
 /// change data segment size

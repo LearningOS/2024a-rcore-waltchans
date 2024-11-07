@@ -126,10 +126,16 @@ pub fn program_mummap(_start: usize, _len: usize) -> bool {
     TASK_MANAGER.program_mummap(_start, _len)
 }
 
-pub fn get_task_info() -> TaskControlBlock {
-    TASK_MANAGER.get_task_info()
+/// My work
+
+pub fn get_task_first_run_time() -> usize {
+    TASK_MANAGER.get_task_first_run_time()
 }
 
-pub fn syscall_count(syscall_id: usize) -> TaskControlBlock {
-    TASK_MANAGER.syscall_count(syscall_id)
+pub fn get_task_syscall_times() -> [u32; MAX_SYSCALL_NUM] {
+    TASK_MANAGER.get_task_syscall_times()
+}
+/// My work
+pub fn syscall_count(syscall_id: usize) {
+    TASK_MANAGER.syscall_count(syscall_id);
 }

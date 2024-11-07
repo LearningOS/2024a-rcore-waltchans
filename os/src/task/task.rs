@@ -1,18 +1,18 @@
 //! Types related to task management & Functions for completely changing TCB
 use super::TaskContext;
-<<<<<<< HEAD
+
 use super::{kstack_alloc, pid_alloc, KernelStack, PidHandle};
 use crate::config::TRAP_CONTEXT_BASE;
 use crate::mm::{MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE};
 use crate::sync::UPSafeCell;
-=======
+
 use crate::config::{MAX_SYSCALL_NUM, TRAP_CONTEXT_BASE};
 use crate::mm::{
     kernel_stack_position, MapPermission, MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE,
 };
 use crate::timer::get_time_us;
+use crate::syscall::TaskInfo;
 
->>>>>>> 58b6777 (try 1)
 use crate::trap::{trap_handler, TrapContext};
 use alloc::sync::{Arc, Weak};
 use alloc::vec::Vec;
@@ -264,10 +264,12 @@ impl TaskControlBlock {
 
 
         let _end = _start + _len;
-        let perm = MapPermission.from_bits(_port<<1 | 1<< 4);
-        
-        self.memory_set
-                .insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
+        if let Some(perm) = MapPermission::from_bits((_port << 1 | 1 << 4) as u8){
+            self.memory_set
+            .insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
+        } else {
+            false
+        }
         
     }
     pub fn program_mummap(&mut self, _start: usize, _len: usize) -> bool {
@@ -281,9 +283,7 @@ impl TaskControlBlock {
         self.memory_set
                 .delete_framed_area(VirtAddr(_start), VirtAddr(_end))
     }
-    pub fn get_task_info(&self) -> self {
-        self
-    }
+
     pub fn syscall_count(&mut self, syscall_id: usize) {
         self.syscall_times[syscall_id] += 1;
     }
