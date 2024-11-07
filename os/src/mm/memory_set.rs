@@ -55,9 +55,9 @@ impl MemorySet {
         end_va: VirtAddr,
         permission: MapPermission,
     ) -> bool {
-        if let Some(area) = self
+        if let Some(_) = self
             .areas
-            .iter_mut()
+            .iter()
             .find(|area| area.vpn_range.get_start() == start_va.floor() && area.vpn_range.get_end() == end_va.ceil() )
         {
             false
