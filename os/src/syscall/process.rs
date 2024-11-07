@@ -120,17 +120,18 @@ pub fn sys_waitpid(pid: isize, exit_code_ptr: *mut i32) -> isize {
     } else {
         -2
     }
+}
     // ---- release current PCB automatically
 fn write_into_buffer(token: usize, ptr: *const u8, len: usize, src: *const u8) -> bool {
-    let dstVec = translated_byte_buffer(token, ptr, len);
-    let mut insize = 0;
-    for dst in dstVec {
-        let blen = dst.len();
-        if (blen > len - insize) {
-            let end = len - insize;
+    let dst_vec = translated_byte_buffer(token, ptr, len);
+    let insize = 0;
+    for dst in dst_vec {
+        let mut blen = dst.len();
+        if blen > len - insize {
+            blen = len - insize;
         }
         unsafe {
-            let bufsrc = src.add(blen);
+            let bufsrc = src.add(insize);
             dst.copy_from_slice(core::slice::from_raw_parts(bufsrc, blen) as &[u8]);
         };
     }
@@ -153,7 +154,7 @@ pub fn sys_get_time(_ts: *mut TimeVal, _tz: usize) -> isize {
         sec: us / 1_000_000,
         usec: us % 1_000_000,
     };
-    let buffers = translated_byte_buffer(current_user_token(), _ts as *mut u8, _tz);
+    // let buffers = translated_byte_buffer(current_user_token(), _ts as *mut u8, _tz);
     
     // unsafe{
     //     let time_str: &[u8] = core::slice::from_raw_parts(&time_info, _tz);
@@ -249,3 +250,4 @@ pub fn sys_set_priority(_prio: isize) -> isize {
     );
     -1
 }
+

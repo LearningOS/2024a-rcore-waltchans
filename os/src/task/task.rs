@@ -271,9 +271,9 @@ impl TaskControlBlock {
         //     false
         // }
         let  mut perm =MapPermission::empty();
-        perm.set(MapPermission::R, _port & 1 != 0);
-        perm.set(MapPermission::W, _port & 2 != 0);
-        perm.set(MapPermission::X, _port & 4 != 0);
+        perm.set(MapPermission::R, _port & 0x1 != 0);
+        perm.set(MapPermission::W, _port & 0x2 != 0);
+        perm.set(MapPermission::X, _port & 0x4 != 0);
         perm.set(MapPermission::U, true);
         self.memory_set
             .insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
