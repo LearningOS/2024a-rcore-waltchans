@@ -14,6 +14,7 @@ mod switch;
 #[allow(clippy::module_inception)]
 mod task;
 
+use crate::config::MAX_SYSCALL_NUM;
 use crate::loader::{get_app_data, get_num_app};
 use crate::sync::UPSafeCell;
 use crate::trap::TrapContext;
@@ -155,29 +156,36 @@ impl TaskManager {
     }
 
     /// My job
-    pub fn program_mummap(&mut self, _start: usize, _len: usize) -> bool {
+    fn program_mummap(&self, _start: usize, _len: usize) -> bool {
         let mut inner = self.inner.exclusive_access();
         let cur = inner.current_task;
         inner.tasks[cur].program_mummap(_start, _len)
     }
 
     /// My job
-    pub fn program_mmap(&mut self, _start: usize, _len: usize, _port: usize) -> bool {
+    fn program_mmap(&self, _start: usize, _len: usize, _port: usize) -> bool {
         let mut inner = self.inner.exclusive_access();
         let cur = inner.current_task;
         inner.tasks[cur].program_mmap(_start, _len, _port)
     }
-
-    pub fn get_task_info(&mut self) {
+    
+    /// My job
+    fn get_task_first_run_time(&self) -> usize {
         let inner = self.inner.exclusive_access();
         let cur = inner.current_task;
-        inner.tasks[cur].get_task_info()
+        inner.tasks[cur].time
+    }
+    fn get_task_syscall_times(&self) -> [u32; MAX_SYSCALL_NUM] {
+        let inner = self.inner.exclusive_access();
+        let cur = inner.current_task;
+        inner.tasks[cur].syscall_times
     }
 
-    pub fn get_task_info(&mut self, syscall_id: usize) {
+    /// My job
+    fn syscall_count(&self, syscall_id: usize) {
         let mut inner = self.inner.exclusive_access();
         let cur = inner.current_task;
-        inner.tasks[cur].syscall_count(syscall_id)
+        inner.tasks[cur].syscall_count(syscall_id);
     }
 }
 
@@ -241,10 +249,16 @@ pub fn program_mummap(_start: usize, _len: usize) -> bool {
     TASK_MANAGER.program_mummap(_start, _len)
 }
 
-pub fn get_task_info() -> TaskControlBlock {
-    TASK_MANAGER.get_task_info()
+/// My work
+
+pub fn get_task_first_run_time() -> usize {
+    TASK_MANAGER.get_task_first_run_time()
 }
 
-pub fn syscall_count(syscall_id: usize) -> TaskControlBlock {
-    TASK_MANAGER.syscall_count(syscall_id)
+pub fn get_task_syscall_times() -> [u32; MAX_SYSCALL_NUM] {
+    TASK_MANAGER.get_task_syscall_times()
+}
+/// My work
+pub fn syscall_count(syscall_id: usize) {
+    TASK_MANAGER.syscall_count(syscall_id);
 }

@@ -1,11 +1,13 @@
 //! Types related to task management
+use core::iter::empty;
+
 use super::TaskContext;
 use crate::config::{MAX_SYSCALL_NUM, TRAP_CONTEXT_BASE};
 use crate::mm::{
     kernel_stack_position, MapPermission, MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE,
 };
 use crate::timer::get_time_us;
-
+use crate::syscall::TaskInfo;
 use crate::trap::{trap_handler, TrapContext};
 
 /// The task control block (TCB) of a task.
@@ -117,10 +119,12 @@ impl TaskControlBlock {
 
 
         let _end = _start + _len;
-        let perm = MapPermission.from_bits(_port<<1 | 1<< 4);
-        
-        self.memory_set
-                .insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
+        if let Some(perm) = MapPermission::from_bits((_port << 1 | 1 << 4) as u8){
+            self.memory_set
+            .insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
+        } else {
+            false
+        }
         
     }
     pub fn program_mummap(&mut self, _start: usize, _len: usize) -> bool {
@@ -134,9 +138,7 @@ impl TaskControlBlock {
         self.memory_set
                 .delete_framed_area(VirtAddr(_start), VirtAddr(_end))
     }
-    pub fn get_task_info(&self) -> self {
-        self
-    }
+
     pub fn syscall_count(&mut self, syscall_id: usize) {
         self.syscall_times[syscall_id] += 1;
     }
