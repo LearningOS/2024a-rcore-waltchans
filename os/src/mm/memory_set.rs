@@ -80,7 +80,7 @@ impl MemorySet {
         start_va: VirtAddr,
         end_va: VirtAddr,
     ) -> bool {
-        if let Some((idx, area)) = self
+        if let Some((idx, _area)) = self
             .areas
             .iter_mut()
             .enumerate()
