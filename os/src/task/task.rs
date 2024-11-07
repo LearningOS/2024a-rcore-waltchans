@@ -1,9 +1,18 @@
 //! Types related to task management & Functions for completely changing TCB
 use super::TaskContext;
+<<<<<<< HEAD
 use super::{kstack_alloc, pid_alloc, KernelStack, PidHandle};
 use crate::config::TRAP_CONTEXT_BASE;
 use crate::mm::{MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE};
 use crate::sync::UPSafeCell;
+=======
+use crate::config::{MAX_SYSCALL_NUM, TRAP_CONTEXT_BASE};
+use crate::mm::{
+    kernel_stack_position, MapPermission, MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE,
+};
+use crate::timer::get_time_us;
+
+>>>>>>> 58b6777 (try 1)
 use crate::trap::{trap_handler, TrapContext};
 use alloc::sync::{Arc, Weak};
 use alloc::vec::Vec;
@@ -68,6 +77,11 @@ pub struct TaskControlBlockInner {
 
     /// Program break
     pub program_brk: usize,
+
+    /// The numbers of syscall called by task
+    pub syscall_times: [u32; MAX_SYSCALL_NUM],
+    /// Total running time of task
+    pub time: usize,
 }
 
 impl TaskControlBlockInner {
@@ -118,6 +132,8 @@ impl TaskControlBlock {
                     exit_code: 0,
                     heap_bottom: user_sp,
                     program_brk: user_sp,
+                    syscall_times: [0; MAX_SYSCALL_NUM],
+                    time: get_time_us(),
                 })
             },
         };
@@ -235,6 +251,41 @@ impl TaskControlBlock {
         } else {
             None
         }
+    }
+    pub fn program_mmap(&mut self, _start: usize, _len: usize, _port: usize) -> bool {
+        // let old_break = self.program_brk;
+        // let new_brk = self.program_brk as isize + size as isize;
+        if _len == 0 ||
+        _port & !0x7 !=0 ||
+        _port & 0x7 == 0
+        {
+            return false;
+        }
+
+
+        let _end = _start + _len;
+        let perm = MapPermission.from_bits(_port<<1 | 1<< 4);
+        
+        self.memory_set
+                .insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
+        
+    }
+    pub fn program_mummap(&mut self, _start: usize, _len: usize) -> bool {
+        // let old_break = self.program_brk;
+        // let new_brk = self.program_brk as isize + size as isize;
+        if _len == 0 {
+            return false;
+        }
+        let _end = _start + _len;
+        
+        self.memory_set
+                .delete_framed_area(VirtAddr(_start), VirtAddr(_end))
+    }
+    pub fn get_task_info(&self) -> self {
+        self
+    }
+    pub fn syscall_count(&mut self, syscall_id: usize) {
+        self.syscall_times[syscall_id] += 1;
     }
 }
 
