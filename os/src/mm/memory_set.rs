@@ -86,7 +86,8 @@ impl MemorySet {
             .enumerate()
             .find(| (_, area) | area.vpn_range.get_start() == start_va.floor() && area.vpn_range.get_end() == end_va.ceil())
         {
-            self.pop(idx);
+            _area.unmap(&mut self.page_table);
+            self.areas.remove(idx);
             true
         } else {
             false
@@ -101,11 +102,11 @@ impl MemorySet {
         self.areas.push(map_area);
     }
     
-    fn pop(&mut self, idx: usize) {
-        let map_area = &mut self.areas[idx];
-        map_area.unmap(&mut self.page_table);
-        self.areas.remove(idx);
-    }
+    // fn pop(&mut self, idx: usize) {
+    //     let map_area = &mut self.areas[idx];
+    //     map_area.unmap(&mut self.page_table);
+    //     self.areas.remove(idx);
+    // }
 
 
     /// Mention that trampoline is not collected by areas.

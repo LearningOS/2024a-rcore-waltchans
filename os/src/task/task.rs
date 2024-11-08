@@ -1,11 +1,11 @@
 //! Types related to task management
 
-use super::TaskContext;
-use crate::config::{MAX_SYSCALL_NUM, TRAP_CONTEXT_BASE};
+use super::{current_user_token, TaskContext};
+use crate::config::{MAX_SYSCALL_NUM, TRAP_CONTEXT_BASE, PAGE_SIZE};
 use crate::mm::{
     kernel_stack_position, MapPermission, MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE,
 };
-use crate::timer::get_time_us;
+use crate::timer::get_time_ms;
 use crate::trap::{trap_handler, TrapContext};
 
 /// The task control block (TCB) of a task.
@@ -71,7 +71,7 @@ impl TaskControlBlock {
             heap_bottom: user_sp,
             program_brk: user_sp,
             syscall_times: [0; MAX_SYSCALL_NUM],
-            time: get_time_us(),
+            time: get_time_ms(),
         };
         // prepare TrapContext in user space
         let trap_cx = task_control_block.get_trap_cx();
@@ -134,13 +134,20 @@ impl TaskControlBlock {
     pub fn program_mummap(&mut self, _start: usize, _len: usize) -> bool {
         // let old_break = self.program_brk;
         // let new_brk = self.program_brk as isize + size as isize;
-        if _len == 0 {
+        let va_start = VirtAddr(_start);
+
+        if _len == 0 ||
+        va_start.page_offset() !=0
+        {
             return false;
         }
+
+
         let _end = _start + _len;
-        
+
+
         self.memory_set
-                .delete_framed_area(VirtAddr(_start), VirtAddr(_end))
+                .delete_framed_area(va_start, VirtAddr(_end))
     }
 
     pub fn syscall_count(&mut self, syscall_id: usize) {
