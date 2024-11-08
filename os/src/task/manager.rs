@@ -23,7 +23,14 @@ impl TaskManager {
     }
     /// Take a process out of the ready queue
     pub fn fetch(&mut self) -> Option<Arc<TaskControlBlock>> {
-        self.ready_queue.pop_front()
+        // self.ready_queue.pop_front()
+        if let Some((idx, _)) = self.ready_queue.iter().enumerate().min_by_key(|(_, item)| item.inner_exclusive_access().stride) {
+            
+            self.ready_queue.remove(idx)
+        } else {
+            None
+        }
+        
     }
 }
 

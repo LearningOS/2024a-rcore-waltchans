@@ -6,7 +6,7 @@ use crate::config::TRAP_CONTEXT_BASE;
 use crate::mm::{MapPermission, MemorySet, PhysPageNum, VirtAddr, VirtPageNum, KERNEL_SPACE};
 use crate::sync::UPSafeCell;
 
-use crate::config::{MAX_SYSCALL_NUM};
+use crate::config::MAX_SYSCALL_NUM;
 // use crate::mm::{
 //     kernel_stack_position, MapPermission, MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE,
 // };
@@ -17,7 +17,7 @@ use crate::trap::{trap_handler, TrapContext};
 use alloc::sync::{Arc, Weak};
 use alloc::vec::Vec;
 use core::cell::RefMut;
-use core::char::MAX;
+
 
 /// Task control block structure
 ///
@@ -32,6 +32,8 @@ pub struct TaskControlBlock {
 
     /// Mutable
     inner: UPSafeCell<TaskControlBlockInner>,
+
+
 }
 
 impl TaskControlBlock {
@@ -83,6 +85,12 @@ pub struct TaskControlBlockInner {
     pub syscall_times: [u32; MAX_SYSCALL_NUM],
     /// Total running time of task
     pub time: usize,
+
+    /// stride
+    pub stride: usize,
+
+    /// prio
+    pub prio: usize,
 }
 
 impl TaskControlBlockInner {
@@ -135,8 +143,12 @@ impl TaskControlBlock {
                     program_brk: user_sp,
                     syscall_times: [0; MAX_SYSCALL_NUM],
                     time: get_time_us(),
+                    stride: 0,
+                    prio: 16,
                 })
             },
+
+            
         };
         // prepare TrapContext in user space
         let trap_cx = task_control_block.inner_exclusive_access().get_trap_cx();
@@ -210,8 +222,11 @@ impl TaskControlBlock {
                     program_brk: parent_inner.program_brk,
                     syscall_times: parent_inner.syscall_times,
                     time: parent_inner.time,
+                    stride: parent_inner.stride,
+                    prio: parent_inner.prio,
                 })
             },
+
         });
         // add child
         parent_inner.children.push(task_control_block.clone());
@@ -267,8 +282,11 @@ impl TaskControlBlock {
                     program_brk: parent_inner.program_brk,
                     syscall_times: [0; MAX_SYSCALL_NUM],
                     time: get_time_us(),
+                    stride: parent_inner.stride,
+                    prio: parent_inner.prio,
                 })
             },
+
         });
         // add child
         parent_inner.children.push(task_control_block.clone());
@@ -320,7 +338,7 @@ impl TaskControlBlock {
             None
         }
     }
-    pub fn program_mmap(&mut self, _start: usize, _len: usize, _port: usize) -> bool {
+    pub fn program_mmap(&self, _start: usize, _len: usize, _port: usize) -> bool {
         // let old_break = self.program_brk;
         // let new_brk = self.program_brk as isize + size as isize;
         if _len == 0 ||
@@ -349,7 +367,7 @@ impl TaskControlBlock {
             insert_framed_area(VirtAddr(_start), VirtAddr(_end), perm)
     }
 
-    pub fn program_mummap(&mut self, _start: usize, _len: usize) -> bool {
+    pub fn program_mummap(&self, _start: usize, _len: usize) -> bool {
         // let old_break = self.program_brk;
         // let new_brk = self.program_brk as isize + size as isize;
         if _len == 0 {
@@ -363,7 +381,7 @@ impl TaskControlBlock {
             true
     }
 
-    pub fn syscall_count(&mut self, syscall_id: usize) {
+    pub fn syscall_count(&self, syscall_id: usize) {
         let mut inner = self.inner_exclusive_access();
 
         inner.syscall_times[syscall_id] += 1;

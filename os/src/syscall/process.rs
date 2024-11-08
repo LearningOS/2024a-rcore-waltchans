@@ -196,7 +196,7 @@ pub fn sys_mmap(_start: usize, _len: usize, _port: usize) -> isize {
         current_task().unwrap().pid.0
     );
 
-    let mut current_task = current_task().unwrap();
+    let current_task = current_task().unwrap();
     
 
 //     -1
@@ -217,7 +217,7 @@ pub fn sys_munmap(_start: usize, _len: usize) -> isize {
         current_task().unwrap().pid.0
     );
     
-    let mut current_task = current_task().unwrap();
+    let current_task = current_task().unwrap();
     
     if current_task.program_mummap(_start, _len) {
         0
@@ -254,15 +254,31 @@ pub fn sys_spawn(_path: *const u8) -> isize {
         "kernel:pid[{}] sys_spawn NOT IMPLEMENTED",
         current_task().unwrap().pid.0
     );
-    -1
+    let token = current_user_token();
+    let path = translated_str(token, _path);
+    if let Some(data) = get_app_data_by_name(path.as_str()) {
+        let task = current_task().unwrap();
+        task.spawn(data).pid.0 as isize
+        
+    } else {
+        -1
+    }
+
 }
 
 // YOUR JOB: Set task priority.
-pub fn sys_set_priority(_prio: isize) -> isize {
+pub fn sys_set_priority(prio: isize) -> isize {
     trace!(
         "kernel:pid[{}] sys_set_priority NOT IMPLEMENTED",
         current_task().unwrap().pid.0
     );
-    -1
+    if prio >= 2 {
+        let current_task = current_task().unwrap();
+        let mut inner = current_task.inner_exclusive_access();
+        inner.prio = prio as usize;
+        prio
+    } else {
+        -1
+    }
 }
 

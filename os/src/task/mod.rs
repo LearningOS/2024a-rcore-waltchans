@@ -28,7 +28,7 @@ pub use manager::{fetch_task, TaskManager};
 use switch::__switch;
 pub use task::{TaskControlBlock, TaskStatus};
 // use crate::timer::get_time_ms;
-use crate::task::manager::TASK_MANAGER;
+// use crate::task::manager::TASK_MANAGER;
 pub use context::TaskContext;
 pub use id::{kstack_alloc, pid_alloc, KernelStack, PidHandle};
 pub use manager::add_task;
