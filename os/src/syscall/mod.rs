@@ -52,6 +52,7 @@ pub fn syscall(syscall_id: usize, args: [usize; 3]) -> isize {
     let current_task = current_task().unwrap();
     let mut inner = current_task.inner_exclusive_access();
     inner.syscall_times[syscall_id]+=1;
+    drop(inner);
     // syscall_count(syscall_id);
     match syscall_id {
         SYSCALL_READ => sys_read(args[0], args[1] as *const u8, args[2]),

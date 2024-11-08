@@ -24,13 +24,24 @@ impl TaskManager {
     /// Take a process out of the ready queue
     pub fn fetch(&mut self) -> Option<Arc<TaskControlBlock>> {
         // self.ready_queue.pop_front()
-        if let Some((idx, _)) = self.ready_queue.iter().enumerate().min_by_key(|(_, item)| item.inner_exclusive_access().stride) {
-            
-            self.ready_queue.remove(idx)
-        } else {
-            None
-        }
+        // if let Some((idx, _)) = self.ready_queue.iter().enumerate().min_by_key(|(_, item)| item.inner_exclusive_access().stride) {
+        //     self.ready_queue.remove(idx)
+        // } else {
+        //     None
+        // }
         
+        if self.ready_queue.len() == 0 {
+            let arc = None;
+            return arc;
+        }
+        let mut st_min = self.ready_queue[0].inner_exclusive_access().stride;
+        for idx in 1..self.ready_queue.len() {
+            let inner = self.ready_queue[idx].inner_exclusive_access();
+            if st_min > inner.stride {
+                st_min = inner.stride;
+            }
+        }
+        self.ready_queue.remove(st_min)
     }
 }
 

@@ -312,6 +312,13 @@ impl TaskControlBlock {
     pub fn getpid(&self) -> usize {
         self.pid.0
     }
+
+    pub fn set_priority(&self, prio: usize) -> usize {
+        let mut inner = self.inner_exclusive_access();
+        inner.prio = prio;
+        prio
+    }
+    
     
     /// change the location of the program break. return None if failed.
     pub fn change_program_brk(&self, size: i32) -> Option<usize> {
