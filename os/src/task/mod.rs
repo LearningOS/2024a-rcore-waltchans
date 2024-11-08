@@ -27,7 +27,8 @@ use lazy_static::*;
 pub use manager::{fetch_task, TaskManager};
 use switch::__switch;
 pub use task::{TaskControlBlock, TaskStatus};
-use crate::timer::get_time_ms;
+// use crate::timer::get_time_ms;
+use crate::task::manager::TASK_MANAGER;
 pub use context::TaskContext;
 pub use id::{kstack_alloc, pid_alloc, KernelStack, PidHandle};
 pub use manager::add_task;
@@ -116,36 +117,37 @@ pub fn add_initproc() {
     add_task(INITPROC.clone());
 }
 
-/// My work
-pub fn program_mmap(_start: usize, _len: usize, _port: usize) -> bool {
-    TASK_MANAGER.program_mmap(_start, _len, _port)
-}
+// /// My work
+// pub fn program_mmap(_start: usize, _len: usize, _port: usize) -> bool {
+//     let task = take_current_task().unwrap();
+//     TASK_MANAGER.program_mmap(_start, _len, _port)
+// }
 
-/// My work
-pub fn program_mummap(_start: usize, _len: usize) -> bool {
-    TASK_MANAGER.program_mummap(_start, _len)
-}
+// /// My work
+// pub fn program_mummap(_start: usize, _len: usize) -> bool {
+//     TASK_MANAGER.program_mummap(_start, _len)
+// }
 
-/// My work
+// /// My work
 
-pub fn get_task_first_run_time() -> usize {
-    TASK_MANAGER.get_task_first_run_time()
-}
+// pub fn get_task_first_run_time() -> usize {
+//     TASK_MANAGER.get_task_first_run_time()
+// }
 
-pub fn get_task_syscall_times() -> [u32; MAX_SYSCALL_NUM] {
-    TASK_MANAGER.get_task_syscall_times()
-}
-/// My work
-pub fn syscall_count(syscall_id: usize) {
-    TASK_MANAGER.syscall_count(syscall_id);
-}
+// pub fn get_task_syscall_times() -> [u32; MAX_SYSCALL_NUM] {
+//     TASK_MANAGER.get_task_syscall_times()
+// }
+// /// My work
+// pub fn syscall_count(syscall_id: usize) {
+//     TASK_MANAGER.syscall_count(syscall_id);
+// }
 
-/// Add the syscall count
-pub fn task_call_count(syscall_id: usize) {
-    TASK_MANAGER.task_call_count(syscall_id);
-}
+// /// Add the syscall count
+// pub fn task_call_count(syscall_id: usize) {
+//     TASK_MANAGER.task_call_count(syscall_id);
+// }
 
-/// get the current task info
-pub fn get_task_info() -> TaskControlBlock {
-    TASK_MANAGER.get_task_info()
-}
+// /// get the current task info
+// pub fn get_task_info() -> TaskControlBlock {
+//     TASK_MANAGER.get_task_info()
+// }

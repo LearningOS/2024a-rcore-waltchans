@@ -4,12 +4,12 @@ use alloc::sync::Arc;
 use crate::{
     config::MAX_SYSCALL_NUM,
     loader::get_app_data_by_name,
-    mm::{translated_refmut, translated_str},
+    mm::{translated_refmut, translated_str, translated_byte_buffer},
     task::{
-        add_task, current_task, current_user_token, exit_current_and_run_next, program_mmap, program_mummap,
+        add_task, current_task, current_user_token, exit_current_and_run_next,
         suspend_current_and_run_next, TaskStatus,
     },
-    timer::get_time_us,
+    timer::{get_time_us,get_time_ms}
 // use core::time;
 
 // use crate::{
@@ -171,16 +171,17 @@ pub fn sys_get_time(_ts: *mut TimeVal, _tz: usize) -> isize {
 /// HINT: You might reimplement it with virtual memory management.
 /// HINT: What if [`TaskInfo`] is splitted by two pages ?
 pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
-    // trace!(
-    //     "kernel:pid[{}] sys_task_info NOT IMPLEMENTED",
-    //     current_task().unwrap().pid.0
-    // );
+    trace!(
+        "kernel:pid[{}] sys_task_info NOT IMPLEMENTED",
+        current_task().unwrap().pid.0
+    );
     // -1
-    trace!("kernel: sys_task_info NOT IMPLEMENTED YET!");
+    let current_task = current_task().unwrap();
+    let inner = current_task.inner_exclusive_access();
     let taskinfo= TaskInfo {
             status: TaskStatus::Running,
-            syscall_times: get_task_syscall_times(),
-            time: get_time_ms() - get_task_first_run_time(),
+            syscall_times: inner.syscall_times,
+            time: get_time_ms() - inner.time,
         };
     let size = core::mem::size_of::<TaskInfo>();
 
@@ -190,37 +191,51 @@ pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
 
 /// YOUR JOB: Implement mmap.
 pub fn sys_mmap(_start: usize, _len: usize, _port: usize) -> isize {
-//     trace!(
-//         "kernel:pid[{}] sys_mmap NOT IMPLEMENTED",
-//         current_task().unwrap().pid.0
-//     );
-//     -1
-// }
+    trace!(
+        "kernel:pid[{}] sys_mmap NOT IMPLEMENTED",
+        current_task().unwrap().pid.0
+    );
 
-// /// YOUR JOB: Implement munmap.
-// pub fn sys_munmap(_start: usize, _len: usize) -> isize {
-//     trace!(
-//         "kernel:pid[{}] sys_munmap NOT IMPLEMENTED",
-//         current_task().unwrap().pid.0
-//     );
+    let mut current_task = current_task().unwrap();
+    
+
 //     -1
-    trace!("kernel: sys_mmap NOT IMPLEMENTED YET!");
-    if program_mmap(_start, _len, _port) {
+
+
+//     trace!("kernel: sys_mmap NOT IMPLEMENTED YET!");
+    if current_task.program_mmap(_start, _len, _port) {
         0
     } else {
         -1
     }
-}
+}   
 
-// YOUR JOB: Implement munmap.
+/// YOUR JOB: Implement munmap.
 pub fn sys_munmap(_start: usize, _len: usize) -> isize {
-    trace!("kernel: sys_munmap NOT IMPLEMENTED YET!");
-    if program_mummap(_start, _len) {
+    trace!(
+        "kernel:pid[{}] sys_munmap NOT IMPLEMENTED",
+        current_task().unwrap().pid.0
+    );
+    
+    let mut current_task = current_task().unwrap();
+    
+    if current_task.program_mummap(_start, _len) {
         0
     } else {
         -1
     }
+    // -1
 }
+
+// // YOUR JOB: Implement munmap.
+// pub fn sys_munmap(_start: usize, _len: usize) -> isize {
+//     trace!("kernel: sys_munmap NOT IMPLEMENTED YET!");
+//     if program_mummap(_start, _len) {
+//         0
+//     } else {
+//         -1
+//     }
+// }
 
 /// change data segment size
 pub fn sys_sbrk(size: i32) -> isize {
