@@ -44,18 +44,21 @@ pub fn sys_yield() -> isize {
 }
 
 fn write_into_buffer(token: usize, ptr: *const u8, len: usize, src: *const u8) -> bool {
-    let dst_vec = translated_byte_buffer(token, ptr, len);
-    let insize = 0;
-    for dst in dst_vec {
-        let mut blen = dst.len();
-        if blen > len - insize {
-            blen = len - insize;
-        }
-        unsafe {
-            let bufsrc = src.add(insize);
-            dst.copy_from_slice(core::slice::from_raw_parts(bufsrc, blen) as &[u8]);
-        };
+    let mut dst_vec = translated_byte_buffer(token, ptr, len);
+    // let insize = 0;
+    unsafe {
+        dst_vec[0].copy_from_slice(core::slice::from_raw_parts(src, len));
     }
+    // for dst in dst_vec {
+    //     let mut blen = dst.len();
+    //     if blen > len - insize {
+    //         blen = len - insize;
+    //     }
+    //     unsafe {
+    //         let bufsrc = src.add(insize);
+    //         dst.copy_from_slice(core::slice::from_raw_parts(bufsrc, blen));
+    //     };
+    // }
     false
 }
 
